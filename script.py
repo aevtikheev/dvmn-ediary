@@ -1,7 +1,13 @@
 import random
 
-from datacenter.models import (Schoolkid, Mark, Chastisement,
-                               Lesson, Subject, Commendation)
+from datacenter.models import (
+    Schoolkid,
+    Mark,
+    Chastisement,
+    Lesson,
+    Subject,
+    Commendation
+)
 
 KID_NAME = 'Фролов Иван'
 SUBJECT = 'Математика'
