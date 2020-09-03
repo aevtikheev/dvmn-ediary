@@ -45,15 +45,14 @@ class BadInputException(Exception):
 
 
 def get_kid(kid_name: str) -> Schoolkid:
-    kids_by_name = Schoolkid.objects.filter(full_name__contains=kid_name)
-    if kids_by_name.count() > 1:
+    try:
+        return Schoolkid.objects.get(full_name__contains=kid_name)
+    except Subject.MultipleObjectsReturned:
         BadInputException(f'Найдено больше одного ученика с именем {kid_name}.'
                           f' Попробуй добавить отчество.')
-    elif kids_by_name.count() == 0:
+    except Subject.DoesNotExist:
         BadInputException(f'Не найден ученик с именем {kid_name}.'
                           f' Проверь правильность написания имени')
-    else:
-        return kids_by_name[0]
 
 
 def get_subject(kid: Schoolkid, subject_title: str) -> Subject:
