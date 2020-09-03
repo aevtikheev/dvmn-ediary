@@ -8,36 +8,38 @@ SUBJECT = 'Математика'
 
 GRADES_TO_FIX = [2, 3]
 DESIRABLE_GRADE = 5
-COMMENDATION_TEXTS = ('Гораздо лучше, чем я ожидал!',
-                      'Хорошо!',
-                      'Ты на верном пути!',
-                      'Ты растешь над собой!',
-                      'Сказано здорово – просто и ясно!',
-                      'Я вижу, как ты стараешься!',
-                      'Талантливо!',
-                      'Так держать!',
-                      'Великолепно!',
-                      'Уже существенно лучше!',
-                      'Теперь у тебя точно все получится!',
-                      'Ты меня приятно удивил!',
-                      'Замечательно!',
-                      'Я поражен!',
-                      'Потрясающе!',
-                      'Здорово!',
-                      'Молодец!',
-                      'С каждым разом у тебя получается всё лучше!',
-                      'Мы с тобой не зря поработали!',
-                      'Ты меня очень обрадовал!',
-                      'Ты многое сделал, я это вижу!',
-                      'Прекрасно!',
-                      'Это как раз то, что нужно!',
-                      'Я тобой горжусь!',
-                      'Именно этого я давно ждал от тебя!',
-                      'Прекрасное начало!',
-                      'Очень хороший ответ!',
-                      'Отлично!',
-                      'Ты, как всегда, точен!',
-                      'Ты сегодня прыгнул выше головы!')
+COMMENDATION_TEXTS = (
+    'Гораздо лучше, чем я ожидал!',
+    'Хорошо!',
+    'Ты на верном пути!',
+    'Ты растешь над собой!',
+    'Сказано здорово – просто и ясно!',
+    'Я вижу, как ты стараешься!',
+    'Талантливо!',
+    'Так держать!',
+    'Великолепно!',
+    'Уже существенно лучше!',
+    'Теперь у тебя точно все получится!',
+    'Ты меня приятно удивил!',
+    'Замечательно!',
+    'Я поражен!',
+    'Потрясающе!',
+    'Здорово!',
+    'Молодец!',
+    'С каждым разом у тебя получается всё лучше!',
+    'Мы с тобой не зря поработали!',
+    'Ты меня очень обрадовал!',
+    'Ты многое сделал, я это вижу!',
+    'Прекрасно!',
+    'Это как раз то, что нужно!',
+    'Я тобой горжусь!',
+    'Именно этого я давно ждал от тебя!',
+    'Прекрасное начало!',
+    'Очень хороший ответ!',
+    'Отлично!',
+    'Ты, как всегда, точен!',
+    'Ты сегодня прыгнул выше головы!',
+)
 
 
 class BadInputException(Exception):
@@ -48,29 +50,41 @@ def get_kid(kid_name: str) -> Schoolkid:
     try:
         return Schoolkid.objects.get(full_name__contains=kid_name)
     except Subject.MultipleObjectsReturned:
-        BadInputException(f'Найдено больше одного ученика с именем {kid_name}.'
-                          f' Попробуй добавить отчество.')
+        BadInputException(
+            f'Найдено больше одного ученика с именем {kid_name}. '
+            f'Попробуй добавить отчество.'
+        )
     except Subject.DoesNotExist:
-        BadInputException(f'Не найден ученик с именем {kid_name}.'
-                          f' Проверь правильность написания имени')
+        BadInputException(
+            f'Не найден ученик с именем {kid_name}. '
+            f'Проверь правильность написания имени'
+        )
 
 
 def get_subject(kid: Schoolkid, subject_title: str) -> Subject:
     try:
-        return Subject.objects.get(title=subject_title,
-                                   year_of_study=kid.year_of_study)
+        return Subject.objects.get(
+            title=subject_title,
+            year_of_study=kid.year_of_study
+        )
     except Subject.DoesNotExist:
-        BadInputException(f'Предмет "{subject_title}" для {kid.year_of_study}'
-                          f' класса не найден. Проверь, правильно ли написано'
-                          f' название предмета (и есть ли такой вообще).')
+        BadInputException(
+            f'Предмет "{subject_title}" для {kid.year_of_study}'
+            f' класса не найден. Проверь, правильно ли написано'
+            f' название предмета (и есть ли такой вообще).'
+        )
     except Subject.MultipleObjectsReturned:
-        BadInputException(f'Найдено несколько предметов с "{subject_title}"'
-                          f' в названии. Уточни название предмета.')
+        BadInputException(
+            f'Найдено несколько предметов с "{subject_title}"'
+            f' в названии. Уточни название предмета.'
+        )
 
 
 def fix_bad_grades(kid: Schoolkid) -> None:
-    kid_bad_grades = Mark.objects.filter(schoolkid=kid,
-                                         points__in=GRADES_TO_FIX)
+    kid_bad_grades = Mark.objects.filter(
+        schoolkid=kid,
+        points__in=GRADES_TO_FIX
+    )
     for grade in kid_bad_grades:
         grade.points = DESIRABLE_GRADE
         grade.save()
@@ -89,11 +103,13 @@ def add_commendation(kid: Schoolkid, subject: Subject) -> None:
         group_letter=kid.group_letter,
         subject=subject
     ).order_by('?')[0]
-    Commendation.objects.create(text=random.choice(COMMENDATION_TEXTS),
-                                created=lesson_to_commend.date,
-                                schoolkid=kid,
-                                subject=lesson_to_commend.subject,
-                                teacher=lesson_to_commend.teacher)
+    Commendation.objects.create(
+        text=random.choice(COMMENDATION_TEXTS),
+        created=lesson_to_commend.date,
+        schoolkid=kid,
+        subject=lesson_to_commend.subject,
+        teacher=lesson_to_commend.teacher
+    )
     print('Похвала добавлена.')
 
 
