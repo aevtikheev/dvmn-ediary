@@ -1,11 +1,7 @@
-"""
-echo 'import script; script.main()' | python manage.py shell
-"""
-
-import sys
 import random
 
-from datacenter.models import Schoolkid, Mark, Chastisement, Lesson, Subject, Commendation
+from datacenter.models import (Schoolkid, Mark, Chastisement,
+                               Lesson, Subject, Commendation)
 
 KID_NAME = 'Фролов Иван'
 SUBJECT = 'Математика'
@@ -44,34 +40,38 @@ COMMENDATION_TEXTS = ('Гораздо лучше, чем я ожидал!',
                       'Ты сегодня прыгнул выше головы!')
 
 
-def print_and_exit(message: str) -> None:
-    print(message)
-    sys.exit(0)
+class BadInputException(Exception):
+    """ Raised when input data is wrong or incomplete. """
 
 
 def get_kid(kid_name: str) -> Schoolkid:
     kids_by_name = Schoolkid.objects.filter(full_name__contains=kid_name)
     if kids_by_name.count() > 1:
-        print_and_exit(f'Найдено больше одного ученика с именем {kid_name}. Попробуй добавить отчество.')
+        BadInputException(f'Найдено больше одного ученика с именем {kid_name}.'
+                          f' Попробуй добавить отчество.')
     elif kids_by_name.count() == 0:
-        print_and_exit(f'Не найден ученик с именем {kid_name}. Проверь правильность написания имени')
+        BadInputException(f'Не найден ученик с именем {kid_name}.'
+                          f' Проверь правильность написания имени')
     else:
         return kids_by_name[0]
 
 
 def get_subject(kid: Schoolkid, subject_title: str) -> Subject:
     try:
-        return Subject.objects.get(title=subject_title, year_of_study=kid.year_of_study)
+        return Subject.objects.get(title=subject_title,
+                                   year_of_study=kid.year_of_study)
     except Subject.DoesNotExist:
-        print_and_exit(f'Предмет "{subject_title}" для {kid.year_of_study} класса не найден. '
-                       f'Проверь, правильно ли написано название предмета (и есть ли такой вообще).')
+        BadInputException(f'Предмет "{subject_title}" для {kid.year_of_study}'
+                          f' класса не найден. Проверь, правильно ли написано'
+                          f' название предмета (и есть ли такой вообще).')
     except Subject.MultipleObjectsReturned:
-        print_and_exit(f'Найдено несколько предметов с "{subject_title}" в названии. '
-                       f'Уточни название предмета.')
+        BadInputException(f'Найдено несколько предметов с "{subject_title}"'
+                          f' в названии. Уточни название предмета.')
 
 
 def fix_bad_grades(kid: Schoolkid) -> None:
-    kid_bad_grades = Mark.objects.filter(schoolkid=kid, points__in=GRADES_TO_FIX)
+    kid_bad_grades = Mark.objects.filter(schoolkid=kid,
+                                         points__in=GRADES_TO_FIX)
     for grade in kid_bad_grades:
         grade.points = DESIRABLE_GRADE
         grade.save()
@@ -85,10 +85,11 @@ def remove_chastisements(kid: Schoolkid) -> None:
 
 
 def add_commendation(kid: Schoolkid, subject: Subject) -> None:
-    all_kid_lessons = Lesson.objects.filter(year_of_study=kid.year_of_study,
-                                            group_letter=kid.group_letter,
-                                            subject=subject)
-    lesson_to_commend = random.choice(all_kid_lessons)
+    lesson_to_commend = Lesson.objects.filter(
+        year_of_study=kid.year_of_study,
+        group_letter=kid.group_letter,
+        subject=subject
+    ).order_by('?')[0]
     Commendation.objects.create(text=random.choice(COMMENDATION_TEXTS),
                                 created=lesson_to_commend.date,
                                 schoolkid=kid,
@@ -99,7 +100,7 @@ def add_commendation(kid: Schoolkid, subject: Subject) -> None:
 
 def main() -> None:
     if not all((KID_NAME, SUBJECT)):
-        print_and_exit("Заполни KID_NAME и SUBJECT")
+        BadInputException("Заполни KID_NAME и SUBJECT")
 
     kid = get_kid(KID_NAME)
     subject = get_subject(kid, SUBJECT)
